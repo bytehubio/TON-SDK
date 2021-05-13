@@ -605,3 +605,95 @@ async fn test_query_counterparties() {
         assert_ne!(counterparties1.result, counterparties2.result);
     }
 }
+
+#[tokio::test(core_threads = 2)]
+async fn test_counterparties_history() {
+    if TestClient::node_se() {
+        return;
+    }
+
+    let client = TestClient::new();
+    println!("Endpoints {:#?}", TestClient::endpoints());
+
+    // check oldest counterpartires - query account with oldest modification time and check that his
+    // counterparties are in DB
+    let mut accounts: ResultOfQueryCollection = client
+        .request_async(
+            "net.query_collection",
+            ParamsOfQueryCollection {
+                collection: "accounts".to_owned(),
+                filter: Some(json!({
+                    "last_paid": { "gt": 0 }
+                })),
+                result: "id last_paid".to_owned(),
+                limit: Some(1),
+                order: Some(vec![OrderBy {
+                    path: "last_paid".to_owned(),
+                    direction: SortDirection::ASC,
+                }]),
+            },
+        )
+        .await
+        .unwrap();
+
+    let account = accounts.result.remove(0);
+
+    let counterparties: ResultOfQueryCollection = client
+        .request_async(
+            "net.query_counterparties",
+            ParamsOfQueryCounterparties {
+                account: account["id"].as_str().unwrap().to_owned(),
+                first: None,
+                after: None,
+                result: "last_message_at".to_owned(),
+            },
+        )
+        .await
+        .unwrap();
+
+    assert!(
+        counterparties.result[0]["last_message_at"].as_u64().unwrap() <= account["last_paid"].as_u64().unwrap(),
+        "Check history failed"
+    );
+
+
+    // check counterparties updating - query latest internal message and check that it is counterparties DB
+    let mut messages: ResultOfQueryCollection = client
+        .request_async(
+            "net.query_collection",
+            ParamsOfQueryCollection {
+                collection: "messages".to_owned(),
+                filter: Some(json!({
+                    "msg_type": { "eq": 0 }
+                })),
+                result: "dst created_at".to_owned(),
+                limit: Some(1),
+                order: Some(vec![OrderBy {
+                    path: "created_at".to_owned(),
+                    direction: SortDirection::DESC,
+                }]),
+            },
+        )
+        .await
+        .unwrap();
+
+    let message = messages.result.remove(0);
+
+    let counterparties: ResultOfQueryCollection = client
+        .request_async(
+            "net.query_counterparties",
+            ParamsOfQueryCounterparties {
+                account: message["dst"].as_str().unwrap().to_owned(),
+                first: None,
+                after: None,
+                result: "last_message_at".to_owned(),
+            },
+        )
+        .await
+        .unwrap();
+
+    assert!(
+        counterparties.result[0]["last_message_at"].as_u64().unwrap() >= message["created_at"].as_u64().unwrap(),
+        "Check updates failed"
+    );
+}
