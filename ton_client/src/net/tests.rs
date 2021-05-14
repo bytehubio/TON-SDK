@@ -679,6 +679,9 @@ async fn test_counterparties_history() {
 
     let message = messages.result.remove(0);
 
+    // give some time for counterparties to update
+    std::thread::sleep(std::time::Duration::from_millis(2000));
+
     let counterparties: ResultOfQueryCollection = client
         .request_async(
             "net.query_counterparties",
