@@ -138,3 +138,102 @@ async fn test_clock_sync() {
         .message
         .ends_with("Synchronize your device time with internet time"));
 }
+
+#[tokio::test(core_threads = 2)]
+async fn test_alternative_workchain() {
+    let client0 = TestClient::new_with_config(json!({
+        "network": {
+            "endpoints": ["common1.ton.dev"],
+            "message_retries_count": 0,
+        }
+    }));
+
+    let client1 = TestClient::new_with_config(json!({
+        "network": {
+            "endpoints": ["common2.ton.dev"],
+        }
+    }));
+
+    let (abi, tvc) = TestClient::package(GIVER_V2, Some(2));
+    let keys = client0.generate_sign_keys();
+
+    let mut deploy_params = ParamsOfEncodeMessage {
+        abi: abi.clone(),
+        deploy_set: Some(DeploySet { 
+            tvc: tvc.clone(),
+            workchain_id: Some(-1),
+            ..Default::default()
+        }),
+        call_set: CallSet::some_with_function("constructor"),
+        signer: Signer::Keys { keys: keys.clone() },
+        processing_try_index: None,
+        address: None,
+    };
+
+    // deploy giver to masterchain first because messages between workchains are not supported yet
+    let address = client0
+        .deploy_with_giver_async(
+            deploy_params.clone(),
+            Some(2_000_000_000u64),
+        )
+        .await;
+
+    deploy_params.deploy_set.as_mut().unwrap().workchain_id = Some(1);
+    let target_address = address.trim_start_matches("-").to_owned();
+    println!("{}", target_address);
+
+    // send some value to target account
+    let run_result = client0
+        .net_process_function(
+            address.clone(),
+            abi.clone(),
+            "sendTransaction",
+            json!({
+                "dest": target_address.to_string(),
+                "value": 1_500_000_000u64,
+                "bounce": false
+            }),
+            Signer::Keys { keys: keys.clone() },
+        )
+        .await
+        .unwrap();
+
+    println!("Before wait");
+
+    // wait for tokens reception
+    client0.wait_output_messages(run_result).await;
+
+    println!("Before deploy");
+
+    client0
+        .net_process_message(
+            ParamsOfProcessMessage {
+                message_encode_params: deploy_params,
+                send_events: false,
+            },
+            TestClient::default_callback
+        ).await.unwrap();
+    
+    println!("Before send");
+
+    // call target
+    let run_result = client0
+        .net_process_function(
+            target_address.clone(),
+            abi,
+            "sendTransaction",
+            json!({
+                "dest": address.to_string(),
+                "value": 500_000_000u64,
+                "bounce": false
+            }),
+            Signer::Keys { keys: keys.clone() },
+        )
+        .await
+        .unwrap();
+
+    println!("After wait");
+
+    // wait for tokens return
+    client0.wait_output_messages(run_result).await;
+}

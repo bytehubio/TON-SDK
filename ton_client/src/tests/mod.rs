@@ -638,6 +638,10 @@ impl TestClient {
             .unwrap();
 
         // wait for tokens reception
+        self.wait_output_messages(run_result).await;
+    }
+
+    pub(crate) async fn wait_output_messages(&self, run_result: ResultOfProcessMessage) {
         for message in run_result.out_messages.iter() {
             let parsed: ResultOfParse = self
                 .request_async(
