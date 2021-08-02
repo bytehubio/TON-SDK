@@ -3,9 +3,9 @@ use crate::{boc::tests::ACCOUNT, json_interface::modules::UtilsModule};
 use crate::encoding::AccountAddressType;
 use crate::error::ClientResult;
 use crate::tests::TestClient;
-use crate::json_interface::utils::{
-    ParamsOfCompressZstd, ResultOfCompressZstd, ResultOfDecompressZstd, ParamsOfDecompressZstd
-};
+// use crate::json_interface::utils::{
+//     ParamsOfCompressZstd, ResultOfCompressZstd, ResultOfDecompressZstd, ParamsOfDecompressZstd
+// };
 
 use super::*;
 
@@ -89,45 +89,45 @@ async fn test_calc_storage_fee() {
     assert_eq!(result.fee, "330");
 }
 
-#[test]
-fn test_compression() {
-    let client = TestClient::new();
-    let uncompressed =
-        b"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor \
-        incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud \
-        exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure \
-        dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. \
-        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit \
-        anim id est laborum.";
+// #[test]
+// fn test_compression() {
+//     let client = TestClient::new();
+//     let uncompressed =
+//         b"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor \
+//         incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud \
+//         exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure \
+//         dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. \
+//         Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit \
+//         anim id est laborum.";
 
-    let compressed: ResultOfCompressZstd = client.request(
-        "utils.compress_zstd",
-        ParamsOfCompressZstd {
-            uncompressed: base64::encode(uncompressed),
-            level: Some(21),
-        }
-    ).unwrap();
+//     let compressed: ResultOfCompressZstd = client.request(
+//         "utils.compress_zstd",
+//         ParamsOfCompressZstd {
+//             uncompressed: base64::encode(uncompressed),
+//             level: Some(21),
+//         }
+//     ).unwrap();
 
-    assert_eq!(
-        compressed.compressed,
-        "KLUv/QCAdQgAJhc5GJCnsA2AIm2tVzjno88mHb3Ttx9b8fXHHDAAMgAyAMUsVo6Pi3rPTDF2WDl510aHTwt44hrUxb\
-        n5oF6iUfiUiRbQhYo/PSM2WvKYt/hMIOQmuOaY/bmJQoRky46EF+cEd+Thsep5Hloo9DLCSwe1vFwcqIHycEKlMqBSo\
-        +szAiIBhkukH5kSIVlFukEWNF2SkIv6HBdPjFAjoUliCPjzKB/4jK91X95rTAKoASkPNqwUEw2Gkscdb3lR8YRYOR+P\
-        0sULCqzPQ8mQFJWnBSyP25mWIY2bFEUSJiGsWD+9NBqLhIAGDggQkLMbt5Y1aDR4uLKqwJXmQFPg/XTXIL7LCgspIF1\
-        YYplND4Uo"
-    );
+//     assert_eq!(
+//         compressed.compressed,
+//         "KLUv/QCAdQgAJhc5GJCnsA2AIm2tVzjno88mHb3Ttx9b8fXHHDAAMgAyAMUsVo6Pi3rPTDF2WDl510aHTwt44hrUxb\
+//         n5oF6iUfiUiRbQhYo/PSM2WvKYt/hMIOQmuOaY/bmJQoRky46EF+cEd+Thsep5Hloo9DLCSwe1vFwcqIHycEKlMqBSo\
+//         +szAiIBhkukH5kSIVlFukEWNF2SkIv6HBdPjFAjoUliCPjzKB/4jK91X95rTAKoASkPNqwUEw2Gkscdb3lR8YRYOR+P\
+//         0sULCqzPQ8mQFJWnBSyP25mWIY2bFEUSJiGsWD+9NBqLhIAGDggQkLMbt5Y1aDR4uLKqwJXmQFPg/XTXIL7LCgspIF1\
+//         YYplND4Uo"
+//     );
 
-    let decompressed: ResultOfDecompressZstd = client.request(
-        "utils.decompress_zstd",
-        ParamsOfDecompressZstd {
-            compressed: compressed.compressed
-        }
-    ).unwrap();
+//     let decompressed: ResultOfDecompressZstd = client.request(
+//         "utils.decompress_zstd",
+//         ParamsOfDecompressZstd {
+//             compressed: compressed.compressed
+//         }
+//     ).unwrap();
 
-    let decompressed = base64::decode(&decompressed.decompressed).unwrap();
+//     let decompressed = base64::decode(&decompressed.decompressed).unwrap();
 
-    assert_eq!(decompressed, uncompressed);
-}
+//     assert_eq!(decompressed, uncompressed);
+// }
 
 #[test]
 fn test_get_address_type() {

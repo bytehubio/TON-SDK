@@ -17,7 +17,7 @@ mod tests;
 
 pub(crate) mod calc_storage_fee;
 pub(crate) mod conversion;
-pub(crate) mod compression;
+// pub(crate) mod compression;
 mod errors;
 
 pub use calc_storage_fee::{
@@ -27,6 +27,6 @@ pub use conversion::{
     convert_address, AddressStringFormat, ParamsOfConvertAddress, ResultOfConvertAddress,
     get_address_type, ParamsOfGetAddressType, ResultOfGetAddressType,
 };
-pub use compression::{compress_zstd, decompress_zstd};
+// pub use compression::{compress_zstd, decompress_zstd};
 pub use errors::{Error, ErrorCode};
 pub use crate::encoding::AccountAddressType;
